@@ -162,7 +162,7 @@ def clean(client,buckets):
             try:
                 response = client.delete_bucket(Bucket=bucket)
                 print("\r                                                         \r")
-                print("{} has been successfully deleted".format(bucket))
+                print(s3nake_print.Green("{} has been successfully deleted".format(bucket)))
             except ClientError as error:
                 print(f'    {error.response["Error"]["Code"]} error running s3:DeleteBucket on bucket {bucket}: {error.response["Error"]["Message"]}')
                 # Continue on anyways, doesn't mean every bucket will fail
