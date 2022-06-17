@@ -1,11 +1,18 @@
-# 🐍 s3nake ransssomware PoC
+<h2>s3nake <sup>(ransssomware PoC)</sup><br></h2>
+
+
 
 <div align=center>
+
+  
   <h3>~</h3>
+  
   <strong>For educational purposes ONLY, not built for performance, some arrangements need to be done</strong>
   <br>It should mainly used to illustrate how a misconfigured s3 bucket could be abused. Proof-of-Concept built with the will to be harmless
   <h3>~</h3>
 </div>
+
+
 
 ## Show 'em 🪄🎩🐇
 
