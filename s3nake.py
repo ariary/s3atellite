@@ -12,7 +12,7 @@ SUFFIX ="-cpy"
 
 def main(args):
     if args.mode is None:
-        print('Use setup, clean, encrypt or decrypt mode. -h/--help to get help manual')
+        print('Use check, setup, clean, encrypt or decrypt mode. -h/--help to get help manual')
         sys.exit()
     # Determine profile
     if args.profile is None:
@@ -36,7 +36,7 @@ def main(args):
     # Determine buckets
     buckets=""
     s3_client = session.client('s3')
-    if args.buckets is None:
+    if args.buckets is None and args.mode !="check":
         print('No buckets were specified, choose ones below or rerun the script using the -b/--buckets argument:')
         response = s3_client.list_buckets()
         # Output the bucket names
@@ -44,6 +44,11 @@ def main(args):
         for bucket in response['Buckets']:
             print(f'  {bucket["Name"]}')
         buckets = input(s3nake_print.Yellow('Choose buckets: '))
+    elif args.mode=="check": #take all buckets
+        response=s3_client.list_buckets()
+        for bucket in response['Buckets']:
+            buckets+=bucket["Name"]+","
+        buckets=buckets[:len(buckets)-1]#withdraw last comma
     else:
         buckets = args.buckets
     
@@ -53,8 +58,6 @@ def main(args):
         quit('No buckets found in the target list.')
     
 
-
-
     # determine region
     if args.region is None:
         region = input(s3nake_print.Yellow('No region was specified, specify it or rerun the script with -r/--region argument: '))
@@ -63,7 +66,9 @@ def main(args):
 
     s3nake_print.print_conf(args,region,buckets,profile_name)
     # ACTION
-    if args.mode=="setup":
+    if args.mode=="check":
+        check(s3_client,buckets)
+    elif args.mode=="setup":
         setup(s3_client,buckets,args.check,region)
     elif args.mode=="clean":
         clean(s3_client,buckets)
@@ -86,6 +91,23 @@ def main(args):
             encrypt(s3_client,buckets,key_id)
         elif args.mode=="decrypt":
             decrypt(s3_client,buckets,key_id)
+
+def check(client,buckets):
+        protected_buckets, maybe_vulnerable_buckets,vulnerable_buckets=api.get_vulnerable_buckets(client,buckets)
+        target_buckets = vulnerable_buckets+maybe_vulnerable_buckets
+        if len(protected_buckets) > 0:
+            print("✅🪣 Buckets protected against ransomware attacks (versioning and MFA Delete):")
+            for b in protected_buckets:
+                print("  • "+b)
+        if len(maybe_vulnerable_buckets) > 0:
+            print("🚨🪣 Buckets protected against ransomware attacks, but an attacker may make the bucket vulnerable by disabling object versioning with the s3:PutBucketVersioning permission:")
+            for b in maybe_vulnerable_buckets:
+                print("  • "+b)
+        if len(vulnerable_buckets) > 0:
+            print("💀🪣 Buckets VULNERABLE to ransomware attacks (no object versioning and MFA delete):")
+            for b in vulnerable_buckets:
+                print("  • "+b)
+
 
 def setup(client,buckets,doCheck,region):
     target_buckets = buckets
@@ -175,7 +197,7 @@ def clean(client,buckets):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This script accepts AWS credentials and help to perform s3 ransomware attack (Only used with prior authorization)')
-    parser.add_argument('mode', help='Script mode: setup (set up S3 bucket to not harm current s3 bucket) or clean (remove s3 bucket) or encrypt (perform ransomware attack on s3 bucket) or decrypt (undo the ransomware attack) ', nargs='?', choices=('setup', 'encrypt','decrypt','clean'))
+    parser.add_argument('mode', help='Script mode: check (check if s3 buckets are vulnerable), setup (set up S3 bucket to not harm current s3 bucket),clean (remove s3 bucket) or encrypt (perform ransomware attack on s3 bucket) or decrypt (undo the ransomware attack) ', nargs='?', choices=('check','setup', 'encrypt','decrypt','clean'))
 
     parser.add_argument('-b', '--buckets', required=False, default=None, help='Specify a comma-separated list of S3 buckets in the current account to use. By default, all buckets are used.')
     parser.add_argument('-p', '--profile', required=False, default=None, help='The AWS CLI profile to use for making API calls. This is usually stored under ~/.aws/credentials. You will be prompted by default.')

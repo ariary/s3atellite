@@ -25,12 +25,13 @@ def get_vulnerable_buckets(client,buckets):
 def copy_all_files_to_bucket_(client,src,dst):
     for key in get_s3_keys_as_generator(client,src):
         sys.stdout.write('\r\033[K' + s3nake_print.Dim(key) + '\r')
-        s3 = boto3.resource('s3')
+        # s3 = boto3.resource('s3')
         copy_source = {
             'Bucket': src,
             'Key': key
         }
-        s3.meta.client.copy(copy_source, dst, key)
+        # s3.meta.client.copy(copy_source, dst, key,SourceClient=client)
+        client.copy_object(Bucket=dst, CopySource=copy_source, Key=key)
 
 
 def delete_all_objects_from_s3_folder(client,bucket_name):
@@ -40,8 +41,9 @@ def delete_all_objects_from_s3_folder(client,bucket_name):
     """
     for key in get_s3_keys_as_generator(client,bucket_name):
         sys.stdout.write('\r\033[K' +  s3nake_print.Dim(key) + '\r')
-        s3 = boto3.resource('s3')
-        s3.Object(bucket_name, key).delete()
+        # s3 = boto3.resource('s3')
+        # s3.Object(bucket_name, key).delete()
+        client.delete_object(Bucket=bucket_name, Key=key)
 
 def get_s3_keys_as_generator(client,bucket):
     """Generate all the keys in an S3 bucket."""
