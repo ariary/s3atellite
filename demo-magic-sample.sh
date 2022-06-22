@@ -8,6 +8,19 @@
 # hide the evidence
 clear
 
+SPEED(){
+    export TYPE_SPEED=70
+}
+
+NORMAL(){
+    export TYPE_SPEED=20
+}
+
+SLOW(){
+    export TYPE_SPEED=5
+}
+
+
 export DEMO_PROMPT="\033[1;32m🪣 S3 ransomware demo \033[1;34m:: \033[1;32m~/pentest/demo » \033[0m"
 #export env var for aws
 
