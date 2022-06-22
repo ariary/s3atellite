@@ -48,12 +48,15 @@ def get_s3_keys_as_generator(client,bucket):
     kwargs = {'Bucket': bucket}
     while True:
         resp = client.list_objects_v2(**kwargs)
-        for obj in resp['Contents']:
-            yield obj['Key']
+        if 'Contents' in resp:    #we've got some key in bucket
+            for obj in resp['Contents']:
+                yield obj['Key']
 
-        try:
-            kwargs['ContinuationToken'] = resp['NextContinuationToken']
-        except KeyError:
+            try:
+                kwargs['ContinuationToken'] = resp['NextContinuationToken']
+            except KeyError:
+                break
+        else: #no key -> exit
             break
 
 def get_user_arn(session):

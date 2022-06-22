@@ -94,20 +94,20 @@ def setup(client,buckets,doCheck,region):
         protected_buckets, maybe_vulnerable_buckets,vulnerable_buckets=api.get_vulnerable_buckets(client,buckets)
         target_buckets = vulnerable_buckets+maybe_vulnerable_buckets
         if len(protected_buckets) > 0:
-            s3nake_print("✅🪣 Buckets protected against ransomware attacks (versioning and MFA Delete):")
+            print("✅🪣 Buckets protected against ransomware attacks (versioning and MFA Delete):")
             for b in protected_buckets:
-                s3nake_print(b)
+                print(b)
         if len(maybe_vulnerable_buckets) > 0:
-            s3nake_print("🚨🪣 Buckets protected against ransomware attacks, but an attacker may make the bucket vulnerable by disabling object versioning with the s3:PutBucketVersioning permission:")
+            print("🚨🪣 Buckets protected against ransomware attacks, but an attacker may make the bucket vulnerable by disabling object versioning with the s3:PutBucketVersioning permission:")
             for b in maybe_vulnerable_buckets:
-                s3nake_print(b)
+                print(b)
         if len(vulnerable_buckets) > 0:
-            s3nake_print("💀🪣 Buckets VULNERABLE to ransomware attacks (no object versioning and MFA delete):")
+            print("💀🪣 Buckets VULNERABLE to ransomware attacks (no object versioning and MFA delete):")
             for b in vulnerable_buckets:
-                s3nake_print(b)
+                print(b)
 
         if not target_buckets: #No vulnerable bucket
-            s3nake_print("All the specified buckets seems to be protected against ransomware attack, do you still want to continue set up? [y/n]:")
+            print("All the specified buckets seems to be protected against ransomware attack, do you still want to continue set up? [y/n]:")
             stop = sys.stdin.read(1)
             if stop == "n" or stop == "N":
                 sys.exit()
@@ -121,6 +121,7 @@ def setup(client,buckets,doCheck,region):
             api.copy_all_files_to_bucket_(client,src=bucket_name,dst=bucket_cpy_name)
         except ClientError as error:
             print(f'    {error.response["Error"]["Code"]} error creating bucket {bucket_cpy_name}: {error.response["Error"]["Message"]}')
+            sys.exit()
         print("\r                                                      \r")
         print(s3nake_print.Green(bucket_name + " has been successfully copied to "+ bucket_cpy_name))
     
@@ -166,6 +167,8 @@ def clean(client,buckets):
             except ClientError as error:
                 print(f'    {error.response["Error"]["Code"]} error running s3:DeleteBucket on bucket {bucket}: {error.response["Error"]["Message"]}')
                 # Continue on anyways, doesn't mean every bucket will fail
+        else:
+            print("Safeguard: can not find \"cpy\" suffix in bucket name => do not delete it")
 
 
 
